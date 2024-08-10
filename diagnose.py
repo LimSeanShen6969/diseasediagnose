@@ -7,18 +7,23 @@ from sklearn.metrics.pairwise import cosine_similarity
 # Set the OpenAI API key correctly
 openai.api_key = st.secrets["mykey"]
 
-# Function to load the data
 def load_data():
     try:
+        # Attempt to load the CSV file
         df = pd.read_csv("qa_dataset_with_embeddings.csv")
         st.write("Data loaded successfully!")
-        st.write(df.columns)  # Print column names to debug
+        st.write("Columns in CSV file:", df.columns)  # Print column names to debug
+        st.write("First few rows of data:")
+        st.write(df.head())  # Print the first few rows to inspect data
         return df
     except FileNotFoundError:
         st.error("File not found. Please make sure 'qa_dataset_with_embeddings.csv' exists in the correct location.")
         st.stop()
-    except pd.errors.ParserError:
-        st.error("Error parsing the CSV file. Please check the file format.")
+    except pd.errors.ParserError as e:
+        st.error(f"Error parsing the CSV file: {e}")
+        st.stop()
+    except Exception as e:
+        st.error(f"An unexpected error occurred: {e}")
         st.stop()
 
 # Function to load embeddings

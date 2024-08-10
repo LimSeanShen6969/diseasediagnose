@@ -3,15 +3,16 @@ import pandas as pd
 import numpy as np
 import openai
 from sklearn.metrics.pairwise import cosine_similarity
-
-open.api_key = st.secrets["mykey"]
-
-# Replace with your chosen embedding model
 from sentence_transformers import SentenceTransformer
+
+# Set the OpenAI API key correctly
+openai.api_key = st.secrets["mykey"]
 
 def load_data():
     try:
         df = pd.read_csv("qa_dataset_with_embeddings.csv")
+        st.write("Data loaded successfully!")
+        st.write(df.columns)  # Print column names to debug
         return df
     except FileNotFoundError:
         st.error("File not found. Please make sure 'qa_dataset_with_embeddings.csv' exists in the correct location.")
@@ -22,30 +23,34 @@ def load_data():
 
 def load_embeddings(data):
     if data is not None:
-        embeddings = data['Question_Embedding'].values
-        embeddings = np.array(list(map(eval, embeddings)))
-        return embeddings
+        if 'Question_Embedding' in data.columns:
+            embeddings = data['Question_Embedding'].values
+            embeddings = np.array(list(map(eval, embeddings)))
+            return embeddings
+        else:
+            st.error("Column 'Question_Embedding' not found in the data.")
+            st.stop()
     else:
         return None
 
-# Generate embedding for a new question
 def generate_embedding(question, model):
     embedding = model.encode(question)
     return embedding
 
-# Find the most similar answer
 def find_answer(question_embedding, embeddings, data, threshold=0.7):
-    similarities = cosine_similarity([question_embedding], embeddings)[0]
-    most_similar_index = np.argmax(similarities)
-    similarity_score = similarities[most_similar_index]
+    if embeddings is not None and len(embeddings) > 0:
+        similarities = cosine_similarity([question_embedding], embeddings)[0]
+        most_similar_index = np.argmax(similarities)
+        similarity_score = similarities[most_similar_index]
 
-    if similarity_score >= threshold:
-        answer = data['Answer'][most_similar_index]
-        return answer, similarity_score
+        if similarity_score >= threshold:
+            answer = data['Answer'][most_similar_index]
+            return answer, similarity_score
+        else:
+            return "I apologize, but I don't have information on that topic yet. Could you please ask other questions?", None
     else:
-        return "I apologize, but I don't have information on that topic yet. Could you please ask other questions?", None
+        return "No embeddings available.", None
 
-# Streamlit app
 def main():
     st.title("Smart FAQ Assistant")
 

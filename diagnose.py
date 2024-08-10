@@ -1,76 +1,68 @@
 import streamlit as st
 import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier 
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
 
-from sklearn.metrics import accuracy_score
+# Replace with your chosen embedding model
+from sentence_transformers import SentenceTransformer
 
-# Function to load your dataset
 def load_data():
-    # Replace 'your_dataset.csv' with the actual filename
     try:
-        data = pd.read_csv('qa_dataset_with_embeddings.csv') 
-        return data
-    except pd.errors.ParserError as e:
-        st.error(f"Error reading CSV file: {e}")
-        # Print more context about the error
-        st.write(f"Error details: {e.args}")
+        df = pd.read_csv("qa_dataset_with_embeddings.csv")
+        return df
+    except FileNotFoundError:
+        st.error("File not found. Please make sure 'qa_dataset_with_embeddings.csv' exists in the correct location.")
+        st.stop()
+    except pd.errors.ParserError:
+        st.error("Error parsing the CSV file. Please check the file format.")
+        st.stop()
+
+def load_embeddings(data):
+    if data is not None:
+        embeddings = data['Question_Embedding'].values
+        embeddings = np.array(list(map(eval, embeddings)))
+        return embeddings
+    else:
         return None
 
-# Function to preprocess the data (if needed)
-def preprocess_data(data):
-    # Handle missing values, feature scaling, etc.
-    data['Question'] = data['Question'].astype(str).str.lower().str.replace('[^\w\s]', '', regex=True)
-    return data
+# Generate embedding for a new question
+def generate_embedding(question, model):
+    embedding = model.encode(question)
+    return embedding
 
-# Function to train the model
-def train_model(X_train, y_train):
-    model = RandomForestClassifier()
-    model.fit(X_train, y_train)
-    return model
+# Find the most similar answer
+def find_answer(question_embedding, embeddings, data, threshold=0.7):
+    similarities = cosine_similarity([question_embedding], embeddings)[0]
+    most_similar_index = np.argmax(similarities)
+    similarity_score = similarities[most_similar_index]
+
+    if similarity_score >= threshold:
+        answer = data['Answer'][most_similar_index]
+        return answer, similarity_score
+    else:
+        return "I apologize, but I don't have information on that topic yet. Could you please ask other questions?", None
 
 # Streamlit app
 def main():
-    st.title("Classification Demo")
+    st.title("Smart FAQ Assistant")
 
-    # Load and preprocess data
-    data = load_data()
-    if data is None: # Stop execution if there was an error loading the data
-        return
-    
-    data = preprocess_data(data)
+    # Load data and embeddings
+    df = load_data()
+    embeddings = load_embeddings(df)
 
-    # Split data into features (X) and target (y)
-    X = data.drop('target_column', axis=1)  # Replace 'target_column' 
-    y = data['target_column']
+    # Load embedding model
+    model = SentenceTransformer('all-MiniLM-L6-v2')
 
-    # Split data into training and testing sets
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-    # Correct indentation
+    # User input
+    user_question = st.text_input("Ask your question:")
 
-    # Train the model
-    model = train_model(X_train, y_train)
-
-    # Make predictions on the test set
-    y_pred = model.predict(X_test)
-
-    # Evaluate the model
-    accuracy = accuracy_score(y_test, y_pred)
-    
-
-    st.write(f"Accuracy: {accuracy}")
-
-    # User input for prediction
-    st.subheader("Predict New Data")
-    new_data = st.text_input("Enter feature values (comma-separated)")
-
-    if st.button("Predict"):
-        try:
-            input_values = [float(x) for x in new_data.split(",")]
-            prediction = model.predict([input_values])
-            st.write(f"Prediction: {prediction[0]}")
-        except ValueError:
-            st.error("Invalid input. Please enter comma-separated numeric values.")
+    if st.button("Submit"):
+        if user_question:
+            question_embedding = generate_embedding(user_question, model)
+            answer, similarity = find_answer(question_embedding, embeddings, df)
+            st.write(answer)
+            if similarity:
+                st.write(f"Similarity Score: {similarity:.2f}")
 
 if __name__ == "__main__":
     main()

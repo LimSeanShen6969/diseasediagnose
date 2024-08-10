@@ -62,25 +62,39 @@ def main():
     df = load_data()
     embeddings = load_embeddings(df)
 
-    # User input
-    user_question = st.text_input("Ask your question:")
+    # Initialize session state variables
+    if 'user_question' not in st.session_state:
+        st.session_state.user_question = ""
+    if 'answer' not in st.session_state:
+        st.session_state.answer = ""
+    if 'similarity' not in st.session_state:
+        st.session_state.similarity = None
 
-    # Add "Clear" button
+    # User input
+    st.session_state.user_question = st.text_input("Ask your question:", value=st.session_state.user_question)
+
+    # Add "Submit" and "Clear" buttons
     if st.button("Submit"):
-        if user_question:
-            question_embedding = generate_embedding(user_question)
+        if st.session_state.user_question:
+            question_embedding = generate_embedding(st.session_state.user_question)
             answer, similarity = find_answer(question_embedding, embeddings, df)
-            st.write(answer)
-            if similarity:
-                st.write(f"Similarity Score: {similarity:.2f}")
+            st.session_state.answer = answer
+            st.session_state.similarity = similarity
 
     if st.button("Clear"):
-        st.experimental_rerun()
+        st.session_state.user_question = ""
+        st.session_state.answer = ""
+        st.session_state.similarity = None
+
+    # Display answer and similarity score
+    if st.session_state.answer:
+        st.write(st.session_state.answer)
+        if st.session_state.similarity is not None:
+            st.write(f"Similarity Score: {st.session_state.similarity:.2f}")
 
     # Rating functionality
-    if st.session_state.get('answered'):
+    if st.session_state.answer:
         rating = st.slider("Rate the helpfulness of the answer (1-5):", min_value=1, max_value=5)
-        st.session_state['rating'] = rating
         st.write(f"Your rating: {rating}")
 
     # Display common FAQs

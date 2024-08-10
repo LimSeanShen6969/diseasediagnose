@@ -79,4 +79,13 @@ def main():
 
     # Rating functionality
     if st.session_state.get('answered'):
-        rating = st.slider("Rate the helpfulness of the answer (1-5):", min_valu
+        rating = st.slider("Rate the helpfulness of the answer (1-5):", min_value=1, max_value=5)
+        st.session_state['rating'] = rating
+        st.write(f"Your rating: {rating}")
+
+    # Display common FAQs
+    if st.checkbox("Show Common FAQs"):
+        st.write(df[['Question', 'Answer']].head(10))
+
+if __name__ == "__main__":
+    main()

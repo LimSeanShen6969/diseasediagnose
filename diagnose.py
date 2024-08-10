@@ -58,7 +58,7 @@ def find_answer(question_embedding, embeddings, data, threshold=0.7):
 
 # Streamlit app
 def main():
-    st.title("Smart FAQ Assistant")
+    st.title("Disease FAQ Assistant")
 
     # Load data and embeddings
     df = load_data()

@@ -7,14 +7,12 @@ from sklearn.metrics.pairwise import cosine_similarity
 # Set the OpenAI API key correctly
 openai.api_key = st.secrets["mykey"]
 
+# Function to load the data
 def load_data():
     try:
         # Attempt to load the CSV file
         df = pd.read_csv("qa_dataset_with_embeddings.csv")
         st.write("Data loaded successfully!")
-        st.write("Columns in CSV file:", df.columns)  # Print column names to debug
-        st.write("First few rows of data:")
-        st.write(df.head())  # Print the first few rows to inspect data
         return df
     except FileNotFoundError:
         st.error("File not found. Please make sure 'qa_dataset_with_embeddings.csv' exists in the correct location.")
@@ -101,10 +99,6 @@ def main():
     if st.session_state.answer:
         rating = st.slider("Rate the helpfulness of the answer (1-5):", min_value=1, max_value=5)
         st.write(f"Your rating: {rating}")
-
-    # Display common FAQs
-    if st.checkbox("Show Common FAQs"):
-        st.write(df[['Question', 'Answer']].head(10))
 
 if __name__ == "__main__":
     main()

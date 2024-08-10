@@ -1,29 +1,26 @@
 import streamlit as st
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier 
 
 from sklearn.metrics import accuracy_score
 
 # Function to load your dataset
 def load_data():
+    # Replace 'your_dataset.csv' with the actual filename
     try:
-        data = pd.read_csv('qa_dataset_with_embeddings.csv')
+        data = pd.read_csv('qa_dataset_with_embeddings.csv') 
         return data
     except pd.errors.ParserError as e:
-        print(f"Error reading CSV: {e}")
-        # Optionally print a few lines around row 502 for inspection
-        with open('qa_dataset_with_embeddings.csv', 'r') as f:
-            lines = f.readlines()
-            for i in range(500, 505):  # Adjust range as needed
-                if i < len(lines):
-                    print(lines[i])
+        st.error(f"Error reading CSV file: {e}")
+        # Print more context about the error
+        st.write(f"Error details: {e.args}")
         return None
 
 # Function to preprocess the data (if needed)
 def preprocess_data(data):
     # Handle missing values, feature scaling, etc.
-    # ...
+    data['Question'] = data['Question'].astype(str).str.lower().str.replace('[^\w\s]', '', regex=True)
     return data
 
 # Function to train the model
@@ -38,22 +35,20 @@ def main():
 
     # Load and preprocess data
     data = load_data()
-
-    # Check if data loaded successfully
-    if data is None:
-        st.error("Error loading data. Please check the file path and format.")
-        return # Stop execution if no data is loaded
-
+    if data is None: # Stop execution if there was an error loading the data
+        return
+    
     data = preprocess_data(data)
 
     # Split data into features (X) and target (y)
-    X = data.drop('target_column', axis=1)  # Replace 'target_column' with the actual name of your target column
-    y = data['target_column'] # Replace 'target_column' with the actual name of your target column
+    X = data.drop('target_column', axis=1)  # Replace 'target_column' 
+    y = data['target_column']
 
     # Split data into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+    # Correct indentation
 
-# Train the model
+    # Train the model
     model = train_model(X_train, y_train)
 
     # Make predictions on the test set
@@ -61,6 +56,7 @@ def main():
 
     # Evaluate the model
     accuracy = accuracy_score(y_test, y_pred)
+    
 
     st.write(f"Accuracy: {accuracy}")
 

@@ -10,12 +10,8 @@ openai.api_key = st.secrets["mykey"]
 # Function to load the data
 def load_data():
     try:
-        # Attempt to load the CSV file with error handling
-        df = pd.read_csv("qa_dataset_with_embeddings.csv", on_bad_lines='warn')  # Use on_bad_lines for handling issues
-        st.write("Data loaded successfully!")
-        st.write("Columns in CSV file:", df.columns)  # Print column names to debug
-        st.write("First few rows of data:")
-        st.write(df.head())  # Print the first few rows to inspect data
+        # Attempt to load the CSV file
+        df = pd.read_csv("qa_dataset_with_embeddings.csv")
         return df
     except FileNotFoundError:
         st.error("File not found. Please make sure 'qa_dataset_with_embeddings.csv' exists in the correct location.")

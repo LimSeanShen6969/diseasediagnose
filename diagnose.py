@@ -7,6 +7,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 
 openai.api_key = st.secrets["mykey"]
+
 # Function to load your dataset
 def load_data():
     try:

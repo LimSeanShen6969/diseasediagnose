@@ -37,6 +37,17 @@ def generate_embedding(question, model):
     embedding = model.encode(question)
     return embedding
 
+def find_answer_gpt(question, api_key):
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": question}
+        ],
+        api_key=api_key
+    )
+    return response.choices[0].message['content']
+
 def find_answer(question_embedding, embeddings, data, threshold=0.7):
     if embeddings is not None and len(embeddings) > 0:
         similarities = cosine_similarity([question_embedding], embeddings)[0]
@@ -47,7 +58,7 @@ def find_answer(question_embedding, embeddings, data, threshold=0.7):
             answer = data['Answer'][most_similar_index]
             return answer, similarity_score
         else:
-            return "I apologize, but I don't have information on that topic yet. Could you please ask other questions?", None
+            return find_answer_gpt(question, openai.api_key), None
     else:
         return "No embeddings available.", None
 
